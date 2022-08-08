@@ -1,0 +1,31 @@
+{
+  "animations": [
+    {
+      "animaiton_name": "Arm Drag",
+      "animation_type":  "WEAK FRONT GRAPPLE A BUTTON",
+      "mmm_id": "000A",
+      "address": "810445B6",
+      "animation_p1": "33A9",
+      "animation_value": "0087",
+      "toki_offset": "D140"
+    },
+    {
+      "animaiton_name": "TEST",
+      "animation_type":  "TAUNT",
+      "mmm_id": "000A",
+      "address": "810445B6",
+      "animation_p1": "33A9",
+      "animation_value": "0087",
+      "toki_offset": "D140"
+    },
+    {
+      "animaiton_name": "TEST",
+      "animation_type":  "TAUNT",
+      "mmm_id": "000A",
+      "address": "810445B6",
+      "animation_p1": "33A9",
+      "animation_value": "0087",
+      "toki_offset": "D140"
+    }
+  ]
+}
