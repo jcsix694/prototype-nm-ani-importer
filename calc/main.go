@@ -2,11 +2,13 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -14,6 +16,8 @@ import (
 )
 
 const ANIMATION_SUB_BY_HEX = "3322"
+const TOKI1OFFSET_SUB_BY_HEX = "2dd9"
+const TOKI1OFFSET_MULTIPLY_BY_HEX = "24"
 
 func getAnimationsDataFromFile() (gjson.Result, error) {
 	// Gets Animation File
@@ -57,7 +61,6 @@ func intToHex(input int) string {
 }
 
 func removeDuplicateStr(gjsonResult gjson.Result) []string {
-
 	var result []string
 
 	gjsonResult.ForEach(func(key, value gjson.Result) bool {
@@ -86,7 +89,7 @@ func main() {
 	aniType := ""
 	aniId := ""
 	aniValue := ""
-	//toki1Offset := ""
+	toki1Offset := ""
 
 	// Gets a list of valid Animation Types
 	animationTypes := validAnimationTypes(animationJson)
@@ -122,7 +125,42 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Calculates the animation value for 01F0 from animation ID
+	toki1Offset, err = calculateToki1Offset(aniId)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Load up the move properties data file
+	testfile, err := os.ReadFile("01F0 - Move Properties Data.bin")
+	if err != nil {
+		os.Exit(1)
+	}
+
+	fmt.Println(hex.EncodeToString(testfile))
+
+	// 	fmt.Println(hex.Dump(testfile))
+	// fmt.Println(bytes.Index([]byte(testfile), []byte("00 88")))
+
+	tt, err := os.Open("01F0 - Move Properties Data.bin")
+	// f, err := io.ReadSeeker("01F0 - Move Properties Data.bin")
+	for {
+		o2, err := tt.Seek(0, 1)
+		if err != nil {
+			log.Fatal(err)
+		}
+		b1 := make([]byte, 20)
+		n1, err := tt.Read(b1)
+		if err != nil {
+			log.Fatal("Failed here ", err)
+		}
+		fmt.Printf("start:%d %d bytes: %s\n", o2, n1, string(b1))
+	}
+
 	fmt.Println("Animation Value (01F0) is " + aniValue)
+	fmt.Println("Toki 1 Offset (02BF) is " + toki1Offset)
 	fmt.Println("program end")
 }
 
@@ -185,6 +223,30 @@ func calculateAnimationValue(aniId string) (string, error) {
 	}
 
 	return intToHex(aniIdInt - aniValSubBy), nil
+}
+
+func calculateToki1Offset(aniId string) (string, error) {
+	aniIdInt, err := hexToInt(aniId)
+
+	if err != nil {
+		return "", fmt.Errorf("error converting hex to int: %w", err)
+	}
+
+	toki1OffsetSubBy, err := hexToInt(TOKI1OFFSET_SUB_BY_HEX)
+
+	if err != nil {
+		return "", fmt.Errorf("error converting hex to int: %w", err)
+	}
+
+	toki1OffsetMultiplyBy, err := hexToInt(TOKI1OFFSET_MULTIPLY_BY_HEX)
+
+	if err != nil {
+		return "", fmt.Errorf("error converting hex to int: %w", err)
+	}
+
+	var calc1 = aniIdInt - toki1OffsetSubBy
+
+	return intToHex(calc1 * toki1OffsetMultiplyBy), nil
 }
 
 func validAnimationTypes(jsonData gjson.Result) []string {
